@@ -3,6 +3,7 @@
 
 #include "halcyon.h"
 #include "hlc_tft_display.h"
+#include "print.h"
 
 #include "hardware/structs/rosc.h"
 
@@ -71,7 +72,7 @@ int LinePoxY(int i){
 void update_display(bool second_display) {
     static bool first_run_led = false;
     static bool first_run_layer = false;
-
+	dprint("update_displayb\n");
     if( first_run_layer == false) {
         // Load fonts
         Retron27 = qp_load_font_mem(font_Retron2000_27);
@@ -145,7 +146,7 @@ void module_suspend_wakeup_init_kb(void) {
 bool module_post_init_kb(void) {
     // Turn on backlight
     backlight_enable();
-
+	dprint("module_post_init_kb\n");
     // Make the devices
     lcd = qp_st7789_make_spi_device(LCD_WIDTH, LCD_HEIGHT, LCD_CS_PIN, LCD_DC_PIN, LCD_RST_PIN, LCD_SPI_DIVISOR, LCD_SPI_MODE);
     lcd_surface = qp_make_rgb565_surface(LCD_WIDTH, LCD_HEIGHT, lcd_surface_fb);
@@ -174,8 +175,9 @@ bool display_module_housekeeping_task_kb(bool second_display) {
     if(!display_module_housekeeping_task_user(second_display)) { return false; }
 
 	update_display(second_display);
-
+	dprint("display_module_housekeeping_task_kb\n");
     // Move surface to lcd
+	qp_rect(lcd_surface, 10, 10, 50, 50, HSV_RED, true);
     qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
     qp_flush(lcd);
 

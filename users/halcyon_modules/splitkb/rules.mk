@@ -14,6 +14,7 @@ SRC += $(USER_PATH)/splitkb/halcyon.c
 HALCONFDIR += $(USER_PATH)/splitkb/halconf.h
 POST_CONFIG_H += $(USER_PATH)/splitkb/config.h
 
+DEBUG_ENABLE = yes
 
 include $(USER_PATH)/splitkb/hlc_tft_display/rules.mk
 
