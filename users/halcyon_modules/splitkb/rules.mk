@@ -14,9 +14,9 @@ SRC += $(USER_PATH)/splitkb/halcyon.c
 HALCONFDIR += $(USER_PATH)/splitkb/halconf.h
 POST_CONFIG_H += $(USER_PATH)/splitkb/config.h
 
-ifdef HLC_TFT_DISPLAY
-  include $(USER_PATH)/splitkb/hlc_tft_display/rules.mk
-endif
+
+include $(USER_PATH)/splitkb/hlc_tft_display/rules.mk
+
 
 HLC_OPTIONS := $(HLC_TFT_DISPLAY)
 
