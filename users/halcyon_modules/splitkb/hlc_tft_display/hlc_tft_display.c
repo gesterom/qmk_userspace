@@ -89,7 +89,6 @@ void update_display(bool second_display) {
         first_run_led = true;
     }
 	
-	int left_layer = layer_state_is(_BASE)
     if(last_layer_state != layer_state || first_run_layer == false) {
 		if (second_display){
 			if (layer_state_is(0)){
