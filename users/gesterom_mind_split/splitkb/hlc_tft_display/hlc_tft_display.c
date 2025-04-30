@@ -89,7 +89,7 @@ void update_display(bool second_display) {
         first_run_led = true;
     }
 	
-    if(last_layer_state != layer_state || first_run_layer == false) {
+   /* if(last_layer_state != layer_state || first_run_layer == false) {
 		if (second_display){
 			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
 			if (layer_state_is(0)){
@@ -128,7 +128,7 @@ void update_display(bool second_display) {
         last_layer_state = layer_state;
         first_run_layer = true;
     }
-	
+	*/
 }
 
 // Called from halcyon.c
