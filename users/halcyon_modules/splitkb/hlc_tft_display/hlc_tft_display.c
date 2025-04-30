@@ -176,7 +176,7 @@ bool display_module_housekeeping_task_kb(bool second_display) {
 	update_display(second_display);
 
     // Move surface to lcd
-	qp_rect(lcd_surface, 10, 10, 50, 50, HS+V_RED, true);
+	qp_rect(lcd_surface, 10, 10, 50, 50, HSV_RED, true);
     qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
     qp_flush(lcd);
 
