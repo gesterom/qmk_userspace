@@ -3,12 +3,11 @@
     "build_targets": [
         [
             "splitkb/halcyon/elora/rev2",
-            "default_hlc",
+            "gesterom_mind_split",
             {
                 "HLC_TFT_DISPLAY": "1",
-                "TARGET": "splitkb_halcyon_elora_rev2_default_hlc_display"
+                "TARGET": "splitkb_halcyon_elora_rev2_gesterom_mind_split"
             }
         ],
-        ["splitkb/halcyon/elora/rev2", "gesterom_mind_split"]
     ]
 }
