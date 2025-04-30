@@ -65,7 +65,7 @@ const char* LayerName(int layer){
 }
 
 int LinePoxY(int i){
-	return (Retron27->line_height - 5)*(i+1);	
+	return (Retron27->line_height*(i) + 5*(i+1));	
 }
 
 void update_display(bool second_display) {
@@ -88,47 +88,47 @@ void update_display(bool second_display) {
         last_led_usb_state = led_usb_state;
         first_run_led = true;
     }
-	
-   /* if(last_layer_state != layer_state || first_run_layer == false) {
-		if (second_display){
-			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
-			if (layer_state_is(0)){
+
+    //if(last_layer_state != layer_state || first_run_layer == false) {
+		//qp_drawtext_recolor(lcd_surface, 5, 5, Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
+		//if (is_keyboard_left()){
+			//qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
+/* 			if (IS_LAYER_ON(0)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(1)){
+			if (IS_LAYER_ON(1)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(1) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(2)){
+			if (IS_LAYER_ON(2)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(2) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(3)){
+			if (IS_LAYER_ON(3)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(3) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(4)){
+			if (IS_LAYER_ON(4)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(4) , HSV_SCROLL_OFF, HSV_BLACK);
-			}				
-		}else{
-			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Right" , HSV_SCROLL_OFF, HSV_BLACK);
-			if (layer_state_is(0)){
+			} */				
+	//	}else{
+			//qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Right" , HSV_SCROLL_OFF, HSV_BLACK);
+/* 			if (IS_LAYER_ON(0)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(5)){
+			if (IS_LAYER_ON(5)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(5) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(6)){
+			if (IS_LAYER_ON(6)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(6) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(7)){
+			if (IS_LAYER_ON(7)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(7) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(8)){
+			if (IS_LAYER_ON(8)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
-			}		
-		}
-        last_layer_state = layer_state;
-        first_run_layer = true;
-    }
-	*/
+			}	 */	
+		//}
+       // last_layer_state = layer_state;
+      //  first_run_layer = true;
+    //}
 }
 
 // Called from halcyon.c
@@ -176,7 +176,6 @@ bool display_module_housekeeping_task_kb(bool second_display) {
 	update_display(second_display);
 
     // Move surface to lcd
-	qp_rect(lcd_surface, 10, 10, 50, 50, HSV_RED, true);
     qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
     qp_flush(lcd);
 
