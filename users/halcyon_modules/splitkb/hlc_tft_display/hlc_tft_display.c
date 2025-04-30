@@ -29,6 +29,7 @@ static const char *scroll =      "Scroll";
 
 static painter_font_handle_t Retron27;
 static painter_font_handle_t Retron27_underline;
+static painter_image_handle_t layer_number;
 
 static uint8_t lcd_surface_fb[SURFACE_REQUIRED_BUFFER_BYTE_SIZE(135, 240, 16)];
 
@@ -40,35 +41,144 @@ painter_device_t lcd_surface;
 led_t last_led_usb_state = {0};
 layer_state_t last_layer_state = {0};
 
-const char* LayerName(int layer){
-	switch(layer){
-	case 0:
-		return "Base";
-	case 1:
-		return "Navig";
-	case 2:		
-		return "Number L";
-	case 3:
-		return "Right";
-	case 4:
-		return "NUMPAD";
-	case 5:
-		return "Bracket";
-	case 6:
-		return "Number R";
-	case 7:
-		return "Light";
-	case 8:
-		return "Mouse";
-	}
-	return "";
+#define GRID_WIDTH 27
+#define GRID_HEIGHT 48
+#define CELL_SIZE 4  // Cell size excluding outline
+#define OUTLINE_SIZE 1
+
+// Define the probability factor for initial alive cells
+#define INITIAL_ALIVE_PROBABILITY 0.2  // 20% chance of being alive
+
+bool grid[GRID_HEIGHT][GRID_WIDTH];  // Current state
+bool new_grid[GRID_HEIGHT][GRID_WIDTH];  // Next state
+bool changed_grid[GRID_HEIGHT][GRID_WIDTH]; // Tracks changed cells
+
+uint32_t get_random_32bit(void) {
+    uint32_t random_value = 0;
+    for (int i = 0; i < 32; i++) {
+        wait_ms(1);
+        random_value = (random_value << 1) | (rosc_hw->randombit & 1);
+    }
+    return random_value;
 }
 
-int LinePoxY(int i){
-	return (Retron27->line_height - 5)*(i+1);	
+void init_grid() {
+    // Initialize grid with alive cells
+    for (int y = 0; y < GRID_HEIGHT; y++) {
+        for (int x = 0; x < GRID_WIDTH; x++) {
+            grid[y][x] = (rand() < INITIAL_ALIVE_PROBABILITY * RAND_MAX);  // Use probability factor
+            changed_grid[y][x] = true;      // Mark all as changed initially
+        }
+    }
 }
 
-void update_display(bool second_display) {
+void draw_grid() {
+    uint8_t hue = 0;  // Hue for alive cells
+    uint8_t sat = 0;  // Saturation for alive cells
+    uint8_t val_dead = 0;  // Brightness for dead cells
+
+    for (int y = 0; y < GRID_HEIGHT; y++) {
+        for (int x = 0; x < GRID_WIDTH; x++) {
+            if (changed_grid[y][x]) { // Only update changed cells
+                uint16_t left = x * (CELL_SIZE + OUTLINE_SIZE);
+                uint16_t top = y * (CELL_SIZE + OUTLINE_SIZE);
+                uint16_t right = left + CELL_SIZE + OUTLINE_SIZE;
+                uint16_t bottom = top + CELL_SIZE + OUTLINE_SIZE;
+
+                // Draw the outline
+                qp_rect(lcd_surface, left, top, right, bottom, hue, sat, val_dead, true);
+
+                // Draw the filled cell inside the outline if it's alive
+                if (grid[y][x]) {
+                    switch (color_value) {
+                    case 0:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_0, true);
+                        break;
+                    case 1:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_1, true);
+                        break;
+                    case 2:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_2, true);
+                        break;
+                    case 3:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_3, true);
+                        break;
+                    case 4:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_4, true);
+                        break;
+                    case 5:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_5, true);
+                        break;
+                    case 6:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_6, true);
+                        break;
+                    case 7:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_7, true);
+                        break;
+                    default:
+                        qp_rect(lcd_surface, left + OUTLINE_SIZE, top + OUTLINE_SIZE, right - OUTLINE_SIZE, bottom - OUTLINE_SIZE, HSV_LAYER_UNDEF, true);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void update_grid() {
+    for (int y = 0; y < GRID_HEIGHT; y++) {
+        for (int x = 0; x < GRID_WIDTH; x++) {
+            int alive_neighbors = 0;
+
+            // Count alive neighbors
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    if (dy == 0 && dx == 0) continue;  // Skip the current cell
+                    int ny = y + dy;
+                    int nx = x + dx;
+                    if (ny >= 0 && ny < GRID_HEIGHT && nx >= 0 && nx < GRID_WIDTH) {
+                        alive_neighbors += grid[ny][nx];
+                    }
+                }
+            }
+
+            // Apply the rules of the Game of Life
+            if (grid[y][x]) {
+                // Any live cell with two or three live neighbours survives.
+                new_grid[y][x] = (alive_neighbors == 2 || alive_neighbors == 3);
+            } else {
+                // Any dead cell with exactly three live neighbours becomes a live cell.
+                new_grid[y][x] = (alive_neighbors == 3);
+            }
+
+            // Track changed cells
+            changed_grid[y][x] = (grid[y][x] != new_grid[y][x]);
+        }
+    }
+
+    // Copy new grid state to current grid
+    for (int y = 0; y < GRID_HEIGHT; y++) {
+        for (int x = 0; x < GRID_WIDTH; x++) {
+            grid[y][x] = new_grid[y][x];
+        }
+    }
+}
+
+// Function to add a cluster of cells at a random position
+void add_cell_cluster() {
+    int cluster_size = 3;  // Size of the cluster (3x3)
+    int x = rand() % (GRID_WIDTH - cluster_size);
+    int y = rand() % (GRID_HEIGHT - cluster_size);
+
+    for (int dy = 0; dy < cluster_size; dy++) {
+        for (int dx = 0; dx < cluster_size; dx++) {
+            bool is_alive = rand() % 2; // Randomly choose between 0 and 1
+            grid[y + dy][x + dx] = is_alive;  // Set the cell to be alive
+            changed_grid[y + dy][x + dx] = true; // Mark the cell as changed
+        }
+    }
+}
+
+void update_display(void) {
     static bool first_run_led = false;
     static bool first_run_layer = false;
 
@@ -88,47 +198,49 @@ void update_display(bool second_display) {
         last_led_usb_state = led_usb_state;
         first_run_led = true;
     }
-	
+
     if(last_layer_state != layer_state || first_run_layer == false) {
-		if (second_display){
-			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
-			if (layer_state_is(0)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(1)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(1) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(2)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(2) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(3)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(3) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(4)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(4) , HSV_SCROLL_OFF, HSV_BLACK);
-			}				
-		}else{
-			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Right" , HSV_SCROLL_OFF, HSV_BLACK);
-			if (layer_state_is(0)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(5)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(5) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(6)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(6) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(7)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(7) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (layer_state_is(8)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
-			}		
-		}
+        switch (get_highest_layer(layer_state|default_layer_state)) {
+        case 0:
+            layer_number = qp_load_image_mem(gfx_0);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_0, HSV_BLACK);
+            break;
+        case 1:
+            layer_number = qp_load_image_mem(gfx_1);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_1, HSV_BLACK);
+            break;
+        case 2:
+            layer_number = qp_load_image_mem(gfx_2);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_2, HSV_BLACK);
+            break;
+        case 3:
+            layer_number = qp_load_image_mem(gfx_3);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_3, HSV_BLACK);
+            break;
+        case 4:
+            layer_number = qp_load_image_mem(gfx_4);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_4, HSV_BLACK);
+            break;
+        case 5:
+            layer_number = qp_load_image_mem(gfx_5);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_5, HSV_BLACK);
+            break;
+        case 6:
+            layer_number = qp_load_image_mem(gfx_6);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_6, HSV_BLACK);
+            break;
+        case 7:
+            layer_number = qp_load_image_mem(gfx_7);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_7, HSV_BLACK);
+            break
+        default:
+            layer_number = qp_load_image_mem(gfx_undef);
+            qp_drawimage_recolor(lcd_surface, 5, 5, layer_number, HSV_LAYER_UNDEF, HSV_BLACK);
+        }
+        qp_close_image(layer_number);
         last_layer_state = layer_state;
         first_run_layer = true;
     }
-	
 }
 
 // Called from halcyon.c
@@ -173,7 +285,36 @@ bool module_post_init_kb(void) {
 bool display_module_housekeeping_task_kb(bool second_display) {
     if(!display_module_housekeeping_task_user(second_display)) { return false; }
 
-	update_display(second_display);
+    if(second_display) {
+        static uint32_t last_draw = 0;
+        static bool second_display_set = false;
+        static uint32_t previous_matrix_activity_time = 0;
+
+        if(!second_display_set) {
+            srand(get_random_32bit());
+            init_grid();
+            color_value = rand() % 8;
+            second_display_set = true;
+        }
+
+        if (timer_elapsed32(last_draw) >= 100) { // Throttle to 10 fps
+            draw_grid();
+            update_grid();
+
+            if (previous_matrix_activity_time != last_matrix_activity_time()) {
+                color_value = rand() % 8;
+                add_cell_cluster();
+                previous_matrix_activity_time = last_matrix_activity_time();
+            }
+
+            last_draw = timer_read32();
+        }
+    }
+
+    // Update display information (layers, numlock, etc.)
+    if(!second_display) {
+        update_display();
+    }
 
     // Move surface to lcd
     qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
