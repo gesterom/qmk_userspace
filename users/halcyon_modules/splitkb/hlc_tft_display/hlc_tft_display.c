@@ -92,35 +92,35 @@ void update_display(bool second_display) {
 	int left_layer = layer_state_is(_BASE)
     if(last_layer_state != layer_state || first_run_layer == false) {
 		if (second_display){
-			if (layer_state_is(_BASE)){
+			if (layer_state_is(0)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_NAVIG)){
+			if (layer_state_is(1)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(1) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_RIGHT)){
+			if (layer_state_is(2)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(2) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_NUM_L)){
+			if (layer_state_is(3)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(3) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_TBD_4)){
+			if (layer_state_is(4)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(4) , HSV_SCROLL_OFF, HSV_BLACK);
 			}				
 		}else{
-			if (layer_state_is(_BASE)){
+			if (layer_state_is(0)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_BRACKET)){
+			if (layer_state_is(5)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(5) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_NUM_R)){
+			if (layer_state_is(6)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(6) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_TBD_7)){
+			if (layer_state_is(7)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(7) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
-			if (layer_state_is(_TBD_8)){
+			if (layer_state_is(8)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
 			}		
 		}
