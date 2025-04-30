@@ -88,7 +88,10 @@ void update_display(bool second_display) {
         last_led_usb_state = led_usb_state;
         first_run_led = true;
     }
-
+	if (is_keyboard_left() && IS_LAYER_ON(0)){
+		qp_rect(lcd_surface, 0, 0, 7, 7, 2, 255, 255, true);
+	}
+//zxcvyuiop
     //if(last_layer_state != layer_state || first_run_layer == false) {
 		//qp_drawtext_recolor(lcd_surface, 5, 5, Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
 		//if (is_keyboard_left()){
