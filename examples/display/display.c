@@ -30,7 +30,7 @@ bool display_module_housekeeping_task_user(bool second_display) {
         // If it's the main display
         if (!second_display) {
             // Create text to write
-            static const char *text = "This is a user display!";
+            static const char *text = "[LEFT] This is a user display!";
 
             // Draw text on top left corner
             qp_drawtext_recolor(lcd_surface, 0, 0, thintel, text, HSV_WHITE, HSV_BLACK);
@@ -40,7 +40,7 @@ bool display_module_housekeeping_task_user(bool second_display) {
         // If it's the secundairy display
         } else {
             // Create text to write
-            static const char *text = "This is a second user display!";
+            static const char *text = "[RIGHT] This is a second user display!";
 
             // Read width from text
             int16_t width = qp_textwidth(thintel, text);
