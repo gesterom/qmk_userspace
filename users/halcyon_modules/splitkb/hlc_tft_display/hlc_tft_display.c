@@ -62,6 +62,7 @@ const char* LayerName(int layer){
 	case 8:
 		return "Mouse";
 	}
+	return "";
 }
 
 int LinePoxY(int i){
