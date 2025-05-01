@@ -88,15 +88,10 @@ void update_display(bool second_display) {
         last_led_usb_state = led_usb_state;
         first_run_led = true;
     }
-	if (is_keyboard_left() && IS_LAYER_ON(0)){
-		qp_rect(lcd_surface, 0, 0, 7, 7, 2, 255, 255, true);
-	}
-//zxcvyuiop
     //if(last_layer_state != layer_state || first_run_layer == false) {
-		//qp_drawtext_recolor(lcd_surface, 5, 5, Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
-		//if (is_keyboard_left()){
-			//qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
-/* 			if (IS_LAYER_ON(0)){
+		if (is_keyboard_left()){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
+ 			if (IS_LAYER_ON(0)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
 			if (IS_LAYER_ON(1)){
@@ -110,10 +105,10 @@ void update_display(bool second_display) {
 			}
 			if (IS_LAYER_ON(4)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(4) , HSV_SCROLL_OFF, HSV_BLACK);
-			} */				
-	//	}else{
-			//qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Right" , HSV_SCROLL_OFF, HSV_BLACK);
-/* 			if (IS_LAYER_ON(0)){
+			}			
+		}else{
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Right" , HSV_SCROLL_OFF, HSV_BLACK);
+			if (IS_LAYER_ON(0)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
 			if (IS_LAYER_ON(5)){
@@ -127,10 +122,10 @@ void update_display(bool second_display) {
 			}
 			if (IS_LAYER_ON(8)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
-			}	 */	
-		//}
-       // last_layer_state = layer_state;
-      //  first_run_layer = true;
+			}	 
+		}
+       last_layer_state = layer_state;
+       first_run_layer = true;
     //}
 }
 

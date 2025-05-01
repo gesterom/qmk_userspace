@@ -1,5 +1,5 @@
 # May need to be changed when adding more pointing devices
-POINTING_DEVICE_ENABLE = no
+POINTING_DEVICE_ENABLE = yes
 POINTING_DEVICE_DRIVER = cirque_pinnacle_spi
 
 # May need to be changed when adding more displays
