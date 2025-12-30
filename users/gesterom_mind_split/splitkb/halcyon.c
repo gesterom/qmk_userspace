@@ -116,6 +116,14 @@ void housekeeping_task_kb(void) {
     housekeeping_task_user();
 }
 
+void keyboard_post_init_user(void) {
+  // Customise these values to desired behaviour
+  debug_enable=true;
+  //debug_matrix=true;
+  //debug_keyboard=true;
+  //debug_mouse=true;
+}
+
 // Elora
 #if defined(KEYBOARD_splitkb_halcyon_elora_rev2)
 #ifdef RGB_MATRIX_ENABLE

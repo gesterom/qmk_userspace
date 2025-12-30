@@ -49,3 +49,5 @@
      {KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO} \
 }
 #endif
+
+#define DYNAMIC_KEYMAP_LAYER_COUNT 9

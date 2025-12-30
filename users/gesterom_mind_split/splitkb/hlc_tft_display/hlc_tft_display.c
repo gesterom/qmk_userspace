@@ -3,8 +3,10 @@
 
 #include "halcyon.h"
 #include "hlc_tft_display.h"
+#include "print.h"
 
 #include "hardware/structs/rosc.h"
+#include "quantum/action_layer.h"
 
 // Fonts mono2
 #include "graphics/fonts/Retron2000-27.qff.h"
@@ -23,22 +25,21 @@
 #include "graphics/numbers/9.qgf.h"
 #include "graphics/numbers/undef.qgf.h"
 
-static const char *caps =        "Caps";
-static const char *num =         "Num";
-static const char *scroll =      "Scroll";
+static const char *caps =        "C";
+static const char *num =         "N";
+static const char *scroll =      "S";
 
 static painter_font_handle_t Retron27;
 static painter_font_handle_t Retron27_underline;
 
-static uint8_t lcd_surface_fb[SURFACE_REQUIRED_BUFFER_BYTE_SIZE(135, 240, 16)];
-
-int color_value = 0;
+static uint8_t lcd_surface_fb[SURFACE_REQUIRED_BUFFER_BYTE_SIZE(LCD_WIDTH, LCD_HEIGHT, 16)];
 
 painter_device_t lcd;
 painter_device_t lcd_surface;
 
-led_t last_led_usb_state = {0};
-layer_state_t last_layer_state = {0};
+//led_t last_led_usb_state = {0};
+//static bool layer_changed = false;
+//static layer_state_t current_layer_state = {0};
 
 const char* LayerName(int layer){
 	switch(layer){
@@ -60,73 +61,92 @@ const char* LayerName(int layer){
 		return "Light";
 	case 8:
 		return "Mouse";
+	case 9:
+		return "Game";
 	}
 	return "";
 }
 
+// layer_state_t layer_state_set_user (layer_state_t state) {
+	// layer_changed = true;
+	// return state;
+// }
+
 int LinePoxY(int i){
 	return (Retron27->line_height*(i) + 5*(i+1));	
 }
+void draw_ping_pong_ball(void){
+	static int32_t v_x = 7;
+	static int32_t v_y = 11;
+	static int32_t x = 50 ;
+	static int32_t y = 50 ;
+	if (x + 10 + v_x > LCD_WIDTH){
+		v_x = -v_x;
+	}else if (x + v_x <= 0) {
+		v_x = -v_x;	
+	}
+	if (y + 10 + v_y  > LCD_HEIGHT){
+		v_y = -v_y;
+	}else if (y + v_y <= 0 ){
+		v_y = -v_y;
+	}
+	x += v_x;
+	y += v_y;
+	qp_rect(lcd_surface, x, y, x+10, y+10, HSV_NUM_ON, true);
+}
 
-void update_display(bool second_display) {
-    static bool first_run_led = false;
-    static bool first_run_layer = false;
+void update_display(layer_state_t state) {
 
-    if( first_run_layer == false) {
-        // Load fonts
-        Retron27 = qp_load_font_mem(font_Retron2000_27);
-        Retron27_underline = qp_load_font_mem(font_Retron2000_underline_27);
-    }
+	led_t led_usb_state = host_keyboard_led_state();
 
-    if(last_led_usb_state.raw != host_keyboard_led_state().raw || first_run_led == false) {
-        led_t led_usb_state = host_keyboard_led_state();
+	led_usb_state.caps_lock   ? 
+		qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, caps,   HSV_CAPS_ON,   HSV_BLACK) 
+		: qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27, caps,   HSV_CAPS_OFF,   HSV_BLACK);
+	led_usb_state.num_lock    ? 
+		qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, num,    HSV_NUM_ON,    HSV_BLACK) 
+		: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27, num,    HSV_NUM_OFF,    HSV_BLACK);
+	led_usb_state.scroll_lock ? 
+		qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27_underline, scroll, HSV_SCROLL_ON, HSV_BLACK) 
+		: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27, scroll, HSV_SCROLL_OFF, HSV_BLACK);
 
-        led_usb_state.caps_lock   ? qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height * 3 - 15, Retron27_underline, caps,   HSV_CAPS_ON,   HSV_BLACK) : qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height * 3 - 15, Retron27, caps,   HSV_CAPS_OFF,   HSV_BLACK);
-        led_usb_state.num_lock    ? qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height * 2 - 10, Retron27_underline, num,    HSV_NUM_ON,    HSV_BLACK) : qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height * 2 - 10, Retron27, num,    HSV_NUM_OFF,    HSV_BLACK);
-        led_usb_state.scroll_lock ? qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5,      Retron27_underline, scroll, HSV_SCROLL_ON, HSV_BLACK) : qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5,      Retron27, scroll, HSV_SCROLL_OFF, HSV_BLACK);
-
-        last_led_usb_state = led_usb_state;
-        first_run_led = true;
-    }
-    //if(last_layer_state != layer_state || first_run_layer == false) {
-		if (is_keyboard_left()){
-			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Left" , HSV_SCROLL_OFF, HSV_BLACK);
- 			if (IS_LAYER_ON(0)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(1)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(1) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(2)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(2) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(3)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(3) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(4)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(4) , HSV_SCROLL_OFF, HSV_BLACK);
-			}			
-		}else{
-			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, "Right" , HSV_SCROLL_OFF, HSV_BLACK);
-			if (IS_LAYER_ON(0)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(5)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(5) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(6)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(6) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(7)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(7) , HSV_SCROLL_OFF, HSV_BLACK);
-			}
-			if (IS_LAYER_ON(8)){
-				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
-			}	 
+	if (is_keyboard_left()){
+		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "Left" , HSV_SCROLL_ON, HSV_BLACK);
+		if (IS_LAYER_OFF_STATE(state, 1) && IS_LAYER_OFF_STATE(state, 2) && IS_LAYER_OFF_STATE(state, 3) && IS_LAYER_OFF_STATE(state, 4) && IS_LAYER_ON_STATE(state, 9)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 		}
-       last_layer_state = layer_state;
-       first_run_layer = true;
-    //}
+		if (IS_LAYER_ON_STATE(state, 1)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(1) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 2)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(2) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 3)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(3) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 4)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(4) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 9)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, LayerName(9) , HSV_SCROLL_OFF, HSV_BLACK);
+		}			
+	}else{
+		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "Right" , HSV_SCROLL_ON, HSV_BLACK);
+		if (IS_LAYER_OFF_STATE(state, 5) && IS_LAYER_OFF_STATE(state, 6) && IS_LAYER_OFF_STATE(state, 7) && IS_LAYER_OFF_STATE(state, 8)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 5)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(5) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 6)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(3), Retron27, LayerName(6) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 7)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, LayerName(7) , HSV_SCROLL_OFF, HSV_BLACK);
+		}
+		if (IS_LAYER_ON_STATE(state, 8)){
+			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
+		}	 
+	}
 }
 
 // Called from halcyon.c
@@ -141,6 +161,7 @@ void module_suspend_wakeup_init_kb(void) {
 
 // Called from halcyon.c
 bool module_post_init_kb(void) {
+	print("module_post_init_kb");
     // Turn on backlight
     backlight_enable();
 
@@ -162,20 +183,41 @@ bool module_post_init_kb(void) {
     qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
     qp_flush(lcd);
 
-    if(!module_post_init_user()) { return false; }
+	Retron27 = qp_load_font_mem(font_Retron2000_27);
+    Retron27_underline = qp_load_font_mem(font_Retron2000_underline_27);
 
+    if(!module_post_init_user()) { return false; }
+	
     return true;
 }
 
 // Called from halcyon.c
 bool display_module_housekeeping_task_kb(bool second_display) {
-    if(!display_module_housekeeping_task_user(second_display)) { return false; }
 
-	update_display(second_display);
+    //if(!display_module_housekeeping_task_user(second_display)) { return false; }
+	/*
+	static uint32_t last_draw = 0;	
+	if (timer_elapsed32(last_draw) >= 100) { // Throttle to 10 fps
+		qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
+		update_display(second_display);
+		qp_surface_draw(lcd_surface, lcd, 0, 0, true);
+		qp_flush(lcd);		
+		last_draw = timer_read32();
+	}*/
 
     // Move surface to lcd
-    qp_surface_draw(lcd_surface, lcd, 0, 0, 0);
-    qp_flush(lcd);
+
 
     return true;
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+  qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
+  
+  update_display(state);
+  
+  qp_surface_draw(lcd_surface, lcd, 0, 0, true);
+  qp_flush(lcd);
+  
+  return state;
 }
