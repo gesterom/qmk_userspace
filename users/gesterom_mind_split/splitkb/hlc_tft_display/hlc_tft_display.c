@@ -123,9 +123,11 @@ void module_suspend_wakeup_init_kb(void) {
     qp_power(lcd, true);
 }
 
+static bool lcd_inited = false;
+
 // Called from halcyon.c
 bool module_post_init_kb(void) {
-	print("module_post_init_kb");
+    //print("module_post_init_kb");
     // Turn on backlight
     backlight_enable();
 
@@ -149,6 +151,8 @@ bool module_post_init_kb(void) {
 
 	Retron27 = qp_load_font_mem(font_Retron2000_27);
     Retron27_underline = qp_load_font_mem(font_Retron2000_underline_27);
+	
+	lcd_inited = true;
 
     if(!module_post_init_user()) { return false; }
 	
@@ -191,12 +195,14 @@ bool display_module_housekeeping_task_kb(bool second_display) {
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-  qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
+	if (!lcd_inited) return state;
+
+	qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
   
-  update_display_on_change(state);
+	update_display_on_change(state);
   
-  qp_surface_draw(lcd_surface, lcd, 0, 0, true);
-  qp_flush(lcd);
+	qp_surface_draw(lcd_surface, lcd, 0, 0, true);
+	qp_flush(lcd);
   
-  return state;
+	return state;
 }
