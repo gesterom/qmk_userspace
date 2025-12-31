@@ -168,7 +168,11 @@ bool module_post_init_kb(void) {
 }
 
 void update_display(bool second_display){
-
+	if (is_keyboard_left()){
+		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "Left" , HSV_SCROLL_ON, HSV_BLACK);
+	}else{
+		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "Right" , HSV_SCROLL_ON, HSV_BLACK);
+	}
 }
 
 // Called from halcyon.c
