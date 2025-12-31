@@ -67,35 +67,11 @@ const char* LayerName(int layer){
 	return "";
 }
 
-// layer_state_t layer_state_set_user (layer_state_t state) {
-	// layer_changed = true;
-	// return state;
-// }
-
 int LinePoxY(int i){
 	return (Retron27->line_height*(i) + 5*(i+1));	
 }
-void draw_ping_pong_ball(void){
-	static int32_t v_x = 7;
-	static int32_t v_y = 11;
-	static int32_t x = 50 ;
-	static int32_t y = 50 ;
-	if (x + 10 + v_x > LCD_WIDTH){
-		v_x = -v_x;
-	}else if (x + v_x <= 0) {
-		v_x = -v_x;	
-	}
-	if (y + 10 + v_y  > LCD_HEIGHT){
-		v_y = -v_y;
-	}else if (y + v_y <= 0 ){
-		v_y = -v_y;
-	}
-	x += v_x;
-	y += v_y;
-	qp_rect(lcd_surface, x, y, x+10, y+10, HSV_NUM_ON, true);
-}
 
-void update_display(layer_state_t state) {
+void update_display_on_change(layer_state_t state) {
 
 	led_t led_usb_state = host_keyboard_led_state();
 
@@ -191,6 +167,10 @@ bool module_post_init_kb(void) {
     return true;
 }
 
+void update_display(second_display){
+
+}
+
 // Called from halcyon.c
 bool display_module_housekeeping_task_kb(bool second_display) {
 
@@ -214,7 +194,7 @@ bool display_module_housekeeping_task_kb(bool second_display) {
 layer_state_t layer_state_set_user(layer_state_t state) {
   qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
   
-  update_display(state);
+  update_display_on_change(state);
   
   qp_surface_draw(lcd_surface, lcd, 0, 0, true);
   qp_flush(lcd);
