@@ -73,18 +73,6 @@ int LinePoxY(int i){
 
 void update_display_on_change(layer_state_t state) {
 
-	led_t led_usb_state = host_keyboard_led_state();
-
-	led_usb_state.caps_lock   ? 
-		qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, caps,   HSV_CAPS_ON,   HSV_BLACK) 
-		: qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27, caps,   HSV_CAPS_OFF,   HSV_BLACK);
-	led_usb_state.num_lock    ? 
-		qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, num,    HSV_NUM_ON,    HSV_BLACK) 
-		: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27, num,    HSV_NUM_OFF,    HSV_BLACK);
-	led_usb_state.scroll_lock ? 
-		qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27_underline, scroll, HSV_SCROLL_ON, HSV_BLACK) 
-		: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27, scroll, HSV_SCROLL_OFF, HSV_BLACK);
-
 	if (is_keyboard_left()){
 		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "Left" , HSV_SCROLL_ON, HSV_BLACK);
 		if (IS_LAYER_OFF_STATE(state, 1) && IS_LAYER_OFF_STATE(state, 2) && IS_LAYER_OFF_STATE(state, 3) && IS_LAYER_OFF_STATE(state, 4) && IS_LAYER_ON_STATE(state, 9)){
@@ -168,6 +156,18 @@ bool module_post_init_kb(void) {
 }
 
 void update_display(bool second_display){
+	led_t led_usb_state = host_keyboard_led_state();
+
+	led_usb_state.caps_lock   ? 
+		qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, caps,   HSV_CAPS_ON,   HSV_BLACK) 
+		: qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27, caps,   HSV_CAPS_OFF,   HSV_BLACK);
+	led_usb_state.num_lock    ? 
+		qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, num,    HSV_NUM_ON,    HSV_BLACK) 
+		: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27, num,    HSV_NUM_OFF,    HSV_BLACK);
+	led_usb_state.scroll_lock ? 
+		qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27_underline, scroll, HSV_SCROLL_ON, HSV_BLACK) 
+		: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27, scroll, HSV_SCROLL_OFF, HSV_BLACK);
+
 	if (is_keyboard_left()){
 		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "Left" , HSV_SCROLL_ON, HSV_BLACK);
 	}else{
@@ -177,7 +177,16 @@ void update_display(bool second_display){
 
 // Called from halcyon.c
 bool display_module_housekeeping_task_kb(bool second_display) {
-
+    if(!display_module_housekeeping_task_user(second_display)) { return false; }
+	
+	static uint32_t last_draw = 0;	
+	if (timer_elapsed32(last_draw) >= 100) { // Throttle to 10 fps
+		qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
+		update_display(second_display);
+		qp_surface_draw(lcd_surface, lcd, 0, 0, true);
+		qp_flush(lcd);		
+		last_draw = timer_read32();
+	}
     return true;
 }
 
