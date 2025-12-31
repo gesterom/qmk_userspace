@@ -174,20 +174,6 @@ void update_display(bool second_display){
 // Called from halcyon.c
 bool display_module_housekeeping_task_kb(bool second_display) {
 
-    //if(!display_module_housekeeping_task_user(second_display)) { return false; }
-	/*
-	static uint32_t last_draw = 0;	
-	if (timer_elapsed32(last_draw) >= 100) { // Throttle to 10 fps
-		qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
-		update_display(second_display);
-		qp_surface_draw(lcd_surface, lcd, 0, 0, true);
-		qp_flush(lcd);		
-		last_draw = timer_read32();
-	}*/
-
-    // Move surface to lcd
-
-
     return true;
 }
 
