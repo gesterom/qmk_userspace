@@ -167,7 +167,7 @@ bool module_post_init_kb(void) {
     return true;
 }
 
-void update_display(second_display){
+void update_display(bool second_display){
 
 }
 
