@@ -48,8 +48,8 @@ const char* LayerName(int layer){
 		return "Base";
 	case 1:
 		return "Navig";
-	case 2:		
-		return "Number L";
+	case 2:
+		return "Numbers";
 	case 3:
 		return "Right";
 	case 4:
@@ -57,13 +57,15 @@ const char* LayerName(int layer){
 	case 5:
 		return "Bracket";
 	case 6:
-		return "Number R";
+		return "Funcs";
 	case 7:
 		return "[Light]";
 	case 8:
 		return "Mouse";
 	case 9:
 		return "--Game--";
+	case 10:
+		return "  More  ";
 	}
 	return "";
 }
@@ -72,7 +74,7 @@ uint16_t encode_layers(void)
 {
     uint16_t mask = 0;
 
-    for (uint8_t i = 0; i < 10; ++i)
+    for (uint8_t i = 0; i < 11; ++i)
     {
         mask |= (uint16_t)(IS_LAYER_ON(i)) << i;
     }
@@ -82,63 +84,56 @@ uint16_t encode_layers(void)
 
 
 int LinePoxY(int i){
-	return (Retron27->line_height*(i) + 5*(i+1));	
+	return (Retron27->line_height*(i) + 5*(i+1));
 }
 
 void update_display(void) {
     static bool font_loaded = false;
 	static bool first_run_led = false;
 	//static bool first_run_led_matrix = false;
-    static bool first_run_layer = false;	
+    static bool first_run_layer = false;
 	static uint16_t last_layer_state = 0;
 	static uint16_t curent_layer_state = 0;
-	
+
 	static bool ready = false;
 	if (!ready && timer_read32() < 500) {
 		return; // wait 500ms after boot
 	}
 	ready = true;
-	
+
     if(font_loaded == false) {
         // Load fonts
         Retron27 = qp_load_font_mem(font_Retron2000_27);
         Retron27_underline = qp_load_font_mem(font_Retron2000_underline_27);
-		font_loaded = true;   
-    }	
-    
+		font_loaded = true;
+    }
+
 	if(last_led_usb_state.raw != host_keyboard_led_state().raw || first_run_led == false) {
         led_t led_usb_state = host_keyboard_led_state();
 		qp_rect(lcd_surface, 0, LCD_HEIGHT - Retron27->line_height - 5 , LCD_WIDTH - 1, LCD_HEIGHT - 1, HSV_BLACK, true);
-		led_usb_state.caps_lock   ? 
-			qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, caps,   HSV_CAPS_ON,   HSV_BLACK) 
+		led_usb_state.caps_lock   ?
+			qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, caps,   HSV_CAPS_ON,   HSV_BLACK)
 			: qp_drawtext_recolor(lcd_surface, 5, LCD_HEIGHT - Retron27->line_height - 5, Retron27, caps,   HSV_CAPS_OFF,   HSV_BLACK);
-		led_usb_state.num_lock    ? 
-			qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, num,    HSV_NUM_ON,    HSV_BLACK) 
+		led_usb_state.num_lock    ?
+			qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27_underline, num,    HSV_NUM_ON,    HSV_BLACK)
 			: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "C"), LCD_HEIGHT - Retron27->line_height - 5, Retron27, num,    HSV_NUM_OFF,    HSV_BLACK);
-		led_usb_state.scroll_lock ? 
-			qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27_underline, scroll, HSV_SCROLL_ON, HSV_BLACK) 
+		led_usb_state.scroll_lock ?
+			qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27_underline, scroll, HSV_SCROLL_ON, HSV_BLACK)
 			: qp_drawtext_recolor(lcd_surface, 5 + qp_textwidth(Retron27, "CN"), LCD_HEIGHT - Retron27->line_height - 5,      Retron27, scroll, HSV_SCROLL_OFF, HSV_BLACK);
-		
+
         last_led_usb_state = led_usb_state;
         first_run_led = true;
     }
-	
-	//if(!first_run_led_matrix){
-		//rgb_matrix_mode(43);
-		//rgb_matrix_sethsv(88, 255, 128);
-		//rgb_matrix_set_speed(63);
-		//first_run_led_matrix = true;
-	//}
-	
+
 	curent_layer_state = encode_layers();
 	bool layer_change = false;
-	
+
     if(last_layer_state != curent_layer_state || first_run_layer == false) {
 		qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - Retron27->line_height - 5, HSV_BLACK, true);
-		
+
         if (is_keyboard_left()){
 			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "[Left]" , HSV_SCROLL_ON, HSV_BLACK);
-			if (IS_LAYER_OFF(1) && IS_LAYER_OFF(2) && IS_LAYER_OFF(3) && IS_LAYER_OFF(4) && IS_LAYER_OFF(9)){
+			if (IS_LAYER_OFF(1) && IS_LAYER_OFF(2) && IS_LAYER_OFF(3) && IS_LAYER_OFF(4) && IS_LAYER_OFF(9) && IS_LAYER_OFF(10)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(0) , HSV_SCROLL_OFF, HSV_BLACK);
 			}
 			if (IS_LAYER_ON(1)){
@@ -155,7 +150,10 @@ void update_display(void) {
 			}
 			if (IS_LAYER_ON(9)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(1), Retron27, LayerName(9) , HSV_SCROLL_ON, HSV_BLACK);
-			}			
+			}
+            if (IS_LAYER_ON(10)){
+				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(2), Retron27, LayerName(10) , HSV_SCROLL_ON, HSV_BLACK);
+			}
 		}else{
 			qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27_underline, "[Right]" , HSV_SCROLL_ON, HSV_BLACK);
 			if (IS_LAYER_OFF(5) && IS_LAYER_OFF(6) && IS_LAYER_OFF(7) && IS_LAYER_OFF(8)){
@@ -169,30 +167,30 @@ void update_display(void) {
 			}
 			if (IS_LAYER_ON(8)){
 				qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, LayerName(8) , HSV_SCROLL_OFF, HSV_BLACK);
-			}	 
+			}
 		}
         last_layer_state = curent_layer_state;
         first_run_layer = true;
 		if(IS_LAYER_ON(7))
 			layer_change = true;
     }
-	
+
 	static HSV last_hsv = {};
 	static uint8_t last_mode = 0;
 	static uint8_t last_speed = 0;
-	
+
 	HSV hsv = rgb_matrix_get_hsv();
 	uint8_t mode = rgb_matrix_get_mode();
 	uint8_t speed = rgb_matrix_get_speed();
-	
-	if ( layer_change || (IS_LAYER_ON(7) && 
-		( (hsv.h != last_hsv.h || hsv.s != last_hsv.s || hsv.v != last_hsv.v) || 
-			last_mode  != mode || 
-			last_speed != speed) 
+
+	if ( layer_change || (IS_LAYER_ON(7) &&
+		( (hsv.h != last_hsv.h || hsv.s != last_hsv.s || hsv.v != last_hsv.v) ||
+			last_mode  != mode ||
+			last_speed != speed)
 		) ){
-		qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - Retron27->line_height - 5, HSV_BLACK, true);		
+		qp_rect(lcd_surface, 0, 0, LCD_WIDTH - 1, LCD_HEIGHT - Retron27->line_height - 5, HSV_BLACK, true);
 		char buf[24];
-		
+
 		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(0), Retron27, LayerName(7), HSV_SCROLL_ON, HSV_BLACK);
 
 		snprintf(buf, sizeof(buf), "H:%3d", hsv.h);
@@ -206,7 +204,7 @@ void update_display(void) {
 
 		snprintf(buf, sizeof(buf), "M:%2d", mode);
 		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(4), Retron27, buf, HSV_SCROLL_OFF, HSV_BLACK);
-		
+
 		snprintf(buf, sizeof(buf), "SPD:%3d", speed);
 		qp_drawtext_recolor(lcd_surface, 5, LinePoxY(5), Retron27, buf, HSV_SCROLL_OFF, HSV_BLACK);
 		last_hsv = hsv;
@@ -256,7 +254,7 @@ bool module_post_init_kb(void) {
 // Called from halcyon.c
 bool display_module_housekeeping_task_kb(bool second_display) {
     if(!display_module_housekeeping_task_user(second_display)) { return false; }
-	
+
 	update_display();
 
     // Move surface to lcd
